@@ -9,3 +9,4 @@ The programme has the following functional requirements:
 * rotating the rubik's cube faces with the input commands
 * generating a random Rubik's Cube state, correct from the point of view of the state invariant
 * finding the solution for the current state as a sequence of rotation of the faces
+* assemble a rubik's cube in a pattern (e.g. a flower)
