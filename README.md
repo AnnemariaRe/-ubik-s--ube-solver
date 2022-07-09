@@ -1,6 +1,6 @@
 # Rubik-s-cube-solver
 
-### A programme simulates the assembly of a 3x3 Rubik's cube, implemented with a graphical application interface using the *OpenGL Utility Toolkit*.
+#### A programme simulates the assembly of a 3x3 Rubik's cube, implemented with a graphical application interface using the *OpenGL Utility Toolkit*.
 
 The programme has the following functional requirements:
 * save and read the rubik's cube state from a file
