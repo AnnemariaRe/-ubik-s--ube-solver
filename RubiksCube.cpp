@@ -1,9 +1,11 @@
-п»ї#include <fstream>
+#include <fstream>
 #include <iostream>
 #include <cmath>
 #include <vector>
 #include <random>
 #include <glut.h>
+#include "MiniCube.cpp"
+#include "Side.cpp"
 
 
 /*                                      ______
@@ -18,155 +20,30 @@
          g h k                         |______|
 */
 
-class MiniCube {
-private:
-
-    // С€РµСЃС‚СЊ С†РІРµС‚РѕРІ РіСЂР°РЅРµР№ РєСѓР±Р°
-    int color[6];
-    // РґР»СЏ С…СЂР°РЅРµРЅРёСЏ RGB С†РІРµС‚РѕРІ
-    unsigned char rgb_color[3];
-
-
-public:
-
-    // СЂР°Р·РјРµСЂ СЂРµР±СЂР°
-    double size;
-
-    void rotate_x() {
-        std::swap(color[5], color[3]);
-        std::swap(color[3], color[4]);
-        std::swap(color[4], color[2]);
-    }
-
-    void rotate_y() {
-        std::swap(color[2], color[1]);
-        std::swap(color[1], color[3]);
-        std::swap(color[3], color[0]);
-    }
-
-    void rotate_z() {
-        std::swap(color[0], color[4]);
-        std::swap(color[4], color[1]);
-        std::swap(color[1], color[5]);
-    }
-
-    void set_color(int i, int color) {
-        this->color[i] = color;
-    }
-
-    unsigned char* rgb(int i) {
-        // СЂР°Р·Р±РёРІР°РµРј color[i] РЅР° 3 СЃРѕСЃС‚Р°РІР»СЏСЋС‰РёС…
-        rgb_color[0] = color[i] >> 16;
-        rgb_color[1] = color[i] >> 8;
-        rgb_color[2] = color[i];
-
-        return rgb_color;
-    }
-
-    // РѕС‚СЂРёСЃРѕРІРєР° РєСѓР±Р°:
-    
-    // СѓСЃС‚Р°РЅР°РІР»РёРІР°РµРј С†РІРµС‚ Рё РЅРѕСЂРјР°Р»Рё
-    void draw() {
-        glPushMatrix();
-        glBegin(GL_QUADS);
-
-        // РІРµСЂС…
-        glColor3ubv(rgb(0));
-        glNormal3f(0, 0, 1);
-        glVertex3f(size, size, size);
-        glVertex3f(0, size, size);
-        glVertex3f(0, 0, size);
-        glVertex3f(size, 0, size);
-
-        // РЅРёР·
-        glColor3ubv(rgb(1));
-        glNormal3f(0, 0, -1);
-        glVertex3f(size, 0, 0);
-        glVertex3f(0, 0, 0);
-        glVertex3f(0, size, 0);
-        glVertex3f(size, size, 0);
-
-        // СЃРїРµСЂРµРґРё
-        glColor3ubv(rgb(2));
-        glNormal3f(0, -1, 0);
-        glVertex3f(size, 0, size);
-        glVertex3f(0, 0, size);
-        glVertex3f(0, 0, 0);
-        glVertex3f(size, 0, 0);
-
-        // СЃР·Р°РґРё
-        glColor3ubv(rgb(3));
-        glNormal3f(0, 1, 0);
-        glVertex3f(size, size, 0);
-        glVertex3f(0, size, 0);
-        glVertex3f(0, size, size);
-        glVertex3f(size, size, size);
-
-        // СЃР»РµРІР°
-        glColor3ubv(rgb(4));
-        glNormal3f(-1, 0, 0);
-        glVertex3f(0, size, size);
-        glVertex3f(0, size, 0);
-        glVertex3f(0, 0, 0);
-        glVertex3f(0, 0, size);
-
-        // СЃРїСЂР°РІР°
-        glColor3ubv(rgb(5));
-        glNormal3f(1, 0, 0);
-        glVertex3f(size, size, 0);
-        glVertex3f(size, size, size);
-        glVertex3f(size, 0, size);
-        glVertex3f(size, 0, 0);
-
-        glEnd();
-        glPopMatrix();
-    }
-
-    // РѕС‚СЂРёСЃРѕРІРєР° РєСѓР±Р° СЃРѕ СЃРјРµС‰РµРЅРёРµРј (x, y, z)
-    void draw(double x, double y, double z) {
-        glPushMatrix();
-        glTranslated(x, y, z);
-        draw();
-        glPopMatrix();
-    }
-};
-
-
-struct Side {
-    int a, b, c, d, e, f, g, h, k;
-    Side() = default;
-
-    /*  9 РєРІР°РґСЂР°С‚РёРєРѕРІ РіСЂР°РЅРё:
-        a b c
-        d e f
-        g h k  */
-
-};
-
 
 class RubiksCube {
 
 private:
-    Side front{}, back{}, up{}, down{}, left{}, right{}; // 6 РіСЂР°РЅРµР№ РєСѓР±Р°
+    Side front{}, back{}, up{}, down{}, left{}, right{}; // 6 граней куба
 
 
     int _angle[3];
     bool if_ok[3][3][3];
 
     MiniCube tmp[3][3];
-    // 27 С‡Р°СЃС‚РµР№
+    // 27 частей
     MiniCube arr[3][3][3];
-    // С…СЂР°РЅРёРј СѓРіРѕР» РїРѕРІРѕСЂРѕС‚Р° РєР°Р¶РґРѕР№ РіСЂР°РЅРё
+    // храним угол поворота каждой грани
     int rotates[6];
-    // СЂР°Р·РјРµСЂ РєСѓР±РёРєР°
+    // размер кубика
     double size;
-    // С†РІРµС‚Р° РіСЂР°РЅРµР№
+    // цвета граней
     unsigned int color[6];
-    // СЃРєРѕСЂРѕСЃС‚СЊ РїРѕРІРѕСЂРѕС‚Р°
+    // скорость поворота
     int speed_turns = 3;
 
-    
-    // РїРѕРІРѕСЂРѕС‚С‹:
+
+    // повороты:
     void Front_rotate() {
         int a = front.a;
         front.a = front.g;
@@ -579,7 +456,7 @@ private:
         Up_counter_rotate();
     }
 
-    // РїСЂРѕРІРµСЂРєРё 
+    // проверки 
 
     bool white_cross_check() {
         return (down.b != 5 || down.f != 5 || down.h != 5 || down.d != 5);
@@ -647,7 +524,7 @@ private:
             return false;
     }
 
-    // СЃР±РѕСЂРєР°
+    // сборка
 
     void first_right_cross() {
         while (white_cross_check()) {
@@ -782,7 +659,7 @@ private:
                 Front_rotate();
                 Front_rotate();
             }
-        } // СЃРѕР±СЂР°РЅ РЅРёР¶РЅРёР№ РєСЂРµСЃС‚
+        } // собран нижний крест
 
         while (front.h != front.e || down.b != 5)
             Down_rotate();
@@ -811,7 +688,7 @@ private:
         Back_rotate();
         Back_rotate();
         Left_rotate();
-        Left_rotate();  // СЃРѕР±СЂР°РЅ РїСЂР°РІРёР»СЊРЅС‹Р№ РЅРёР¶РЅРёР№ РєСЂРµСЃС‚
+        Left_rotate();  // собран правильный нижний крест
     }
 
     void first_layer_edges() {
@@ -1161,7 +1038,7 @@ private:
             if (front.g == 5 || left.k == 5)
                 Front_pif_paf();
 
-            // РїРµСЂРІС‹Р№ СЃР»РѕР№ СЃРѕР±СЂР°РЅ
+            // первый слой собран
         }
     }
 
@@ -1299,7 +1176,7 @@ private:
                 Up_rotate();
             }
         }
-        // СЃРѕР±СЂР°РЅС‹ СЂРµР±СЂР° РІС‚РѕСЂРѕРіРѕ СЃР»РѕСЏ
+        // собраны ребра второго слоя
     }
 
     void upper_right_cross() {
@@ -1339,7 +1216,7 @@ private:
                 Right_pif_paf();
                 Front_counter_rotate();
             }
-        } // СЃРѕР±СЂР°РЅ Р¶РµР»С‚С‹Р№ РєСЂРµСЃС‚
+        } // собран желтый крест
 
         bool check = false;
         if (check_yellow_right_cross())
@@ -1357,7 +1234,7 @@ private:
                     if (check_yellow_right_cross())
                         check = true;
                 }
-            } // РїСЂРѕРІРµСЂРєР° РЅР° РїСЂР°РІРёР»СЊРЅС‹Р№ Р¶РµР»С‚С‹Р№ РєСЂРµСЃС‚
+            } // проверка на правильный желтый крест
         }
         if (!check) {
             while (!check_yellow_right_cross()) {
@@ -1427,7 +1304,7 @@ private:
                     Right_counter_rotate();
                 }
             }
-        }  // СЃРѕР±СЂР°РЅ РїСЂР°РІРёР»СЊРЅС‹Р№ Р¶РµР»С‚С‹Р№ РєСЂРµСЃС‚
+        }  // собран правильный желтый крест
     }
 
     void last_layer_edges() {
@@ -1490,7 +1367,7 @@ private:
                 Up_counter_rotate();
                 Left_rotate();
             }
-        }   //РџСЂР°РІРёР»СЊРЅРѕ РїРѕСЃС‚Р°РІР»РµРЅС‹ СѓРіР»С‹
+        }   //Правильно поставлены углы
 
         for (int i = 0; i < 5; i++) {
             if (up.a != 4)
@@ -1501,10 +1378,10 @@ private:
                     Down_counter_rotate();
                 }
             Up_rotate();
-        } // РЎРѕР±СЂР°РЅР° Р¶РµР»С‚Р°СЏ РіСЂР°РЅСЊ
+        } // Собрана желтая грань
 
         while (!assembly_check())
-            Up_rotate(); // РґРѕРІРѕСЂР°С‡РёРІР°РµРј РїРѕСЃР»РµРґРЅСЋСЋ СЃС‚РѕСЂРѕРЅСѓ Рё РєСѓР±РёРє СЃРѕР±СЂР°РЅ
+            Up_rotate(); // доворачиваем последнюю сторону и кубик собран
     }
 
 public:
@@ -1709,11 +1586,11 @@ public:
         count[down.h]++; count[down.k]++;
 
         for (int i : count)
-            if (i != 9) return false;  //РїСЂРѕРІРµСЂРєР° С†РІРµС‚РѕРІ
+            if (i != 9) return false;  //проверка цветов
 
 
         if (front.e != 0 || back.e != 1 || left.e != 2 || right.e != 3
-            || up.e != 4 || down.e != 5) return false;  //РїСЂРѕРІРµСЂРєР° С†РµРЅС‚СЂРѕРІ
+            || up.e != 4 || down.e != 5) return false;  //проверка центров
 
         int edges = 0;
 
@@ -1797,7 +1674,7 @@ public:
             check_edge(back.g, down.k, right.k, 5, 1, 2))
             edges++;
 
-        if (edges != 8) return false;  //РїСЂРѕРІРµСЂРєР° СѓРіР»РѕРІ
+        if (edges != 8) return false;  //проверка углов
 
         int ribs = 0;
 
@@ -1942,9 +1819,9 @@ public:
     }
 
 
-    // РІРёР·СѓР°Р»РёР·Р°С†РёСЏ
-    
-    // РЅРѕРјРµСЂ РіСЂР°РЅРё РґР»СЏ РїРѕРІРѕСЂРѕС‚РѕРІ
+    // визуализация
+
+    // номер грани для поворотов
     int current;
 
     void clear(double size, unsigned int* color) {
@@ -1955,37 +1832,37 @@ public:
         for (i = 0; i < 6; i++)
             this->color[i] = color[i];
 
-        // РІРµСЂС…
+        // верх
         for (i = 0; i < 3; i++)
             for (j = 0; j < 3; j++)
                 arr[i][j][2].set_color(0, color[0]);
 
-        // РЅРёР·
+        // низ
         for (i = 0; i < 3; i++)
             for (j = 0; j < 3; j++)
                 arr[i][j][0].set_color(1, color[1]);
 
-        // СЃРїРµСЂРµРґРё
+        // спереди
         for (k = 0; k < 3; k++)
             for (j = 0; j < 3; j++)
                 arr[j][0][k].set_color(2, color[2]);
 
-        // СЃР·Р°РґРё
+        // сзади
         for (k = 0; k < 3; k++)
             for (j = 0; j < 3; j++)
                 arr[j][2][k].set_color(3, color[3]);
 
-        // СЃР»РµРІР°
+        // слева
         for (i = 0; i < 3; i++)
             for (k = 0; k < 3; k++)
                 arr[0][k][i].set_color(4, color[4]);
 
-        // СЃРїСЂР°РІР°
+        // справа
         for (i = 0; i < 3; i++)
             for (k = 0; k < 3; k++)
                 arr[2][k][i].set_color(5, color[5]);
 
-        // СЂР°Р·РјРµСЂС‹ РјРµР»РєРёС… РґРµС‚Р°Р»РµР№
+        // размеры мелких деталей
         for (i = 0; i < 3; i++)
             for (j = 0; j < 3; j++)
                 for (k = 0; k < 3; k++)
@@ -1994,7 +1871,7 @@ public:
 
     void draw() {
         const float K = 0.5;
-        // РєСѓР± С‡РµСЂРЅРѕРіРѕ С†РІРµС‚Р°, СЂР°Р·РјРµСЂ РєРѕС‚РѕСЂРѕРіРѕ СЂР°РІРµРЅ K*size
+        // куб черного цвета, размер которого равен K*size
         glPushMatrix();
         glColor3f(0, 0, 0);
 
@@ -2016,65 +1893,65 @@ public:
 
             if (current == 0 || current == 1) {
                 k = (current & 1) * 2;
-                for (i = 0; i < 3; i++) 
-                    for (j = 0; j < 3; j++) 
+                for (i = 0; i < 3; i++)
+                    for (j = 0; j < 3; j++)
                         if_ok[i][j][k] = false;
-                    
-                glTranslated(size / 2, size / 2, 0);   // СЃРґРІРёРіРё
-                glRotatef(rotates[current], 0, 0, 1);   
-                glTranslated(-size / 2, -size / 2, 0); 
 
-                // СЂРёСЃСѓРµРј
-                for (i = 0; i < 3; i++) 
-                    for (j = 0; j < 3; j++) 
+                glTranslated(size / 2, size / 2, 0);   // сдвиги
+                glRotatef(rotates[current], 0, 0, 1);
+                glTranslated(-size / 2, -size / 2, 0);
+
+                // рисуем
+                for (i = 0; i < 3; i++)
+                    for (j = 0; j < 3; j++)
                         arr[i][j][k].draw(size / 3 * i, size / 3 * j, size / 3 * k);
             }
             else if (current == 2 || current == 3) {
                 j = (current & 1) * 2;
-                for (i = 0; i < 3; i++) 
-                    for (k = 0; k < 3; k++) 
+                for (i = 0; i < 3; i++)
+                    for (k = 0; k < 3; k++)
                         if_ok[i][j][k] = false;
 
                 glTranslated(size / 2, 0, size / 2);
                 glRotatef(rotates[current], 0, 1, 0);
                 glTranslated(-size / 2, 0, -size / 2);
 
-                for (i = 0; i < 3; i++) 
-                    for (k = 0; k < 3; k++) 
+                for (i = 0; i < 3; i++)
+                    for (k = 0; k < 3; k++)
                         arr[i][j][k].draw(size / 3 * i, size / 3 * j, size / 3 * k);
             }
             else if (current == 4 || current == 5) {
                 i = (current & 1) * 2;
-                for (j = 0; j < 3; j++) 
-                    for (k = 0; k < 3; k++) 
+                for (j = 0; j < 3; j++)
+                    for (k = 0; k < 3; k++)
                         if_ok[i][j][k] = false;
 
                 glTranslated(0, size / 2, size / 2);
                 glRotatef(rotates[current], 1, 0, 0);
                 glTranslated(0, -size / 2, -size / 2);
 
-                for (j = 0; j < 3; j++) 
-                    for (k = 0; k < 3; k++) 
+                for (j = 0; j < 3; j++)
+                    for (k = 0; k < 3; k++)
                         arr[i][j][k].draw(size / 3 * i, size / 3 * j, size / 3 * k);
             }
 
             glPopMatrix();
         }
 
-        for (int i = 0; i < 3; i++) 
-            for (int j = 0; j < 3; j++) 
-                for (int k = 0; k < 3; k++) 
-                    if (if_ok[i][j][k]) 
+        for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                for (int k = 0; k < 3; k++)
+                    if (if_ok[i][j][k])
                         arr[i][j][k].draw(size / 3 * i, size / 3 * j, size / 3 * k);
-                    
+
     }
 
 
-    // РїСЂРѕРµРєС†РёРё СѓРіР»Р° РїРѕРІРѕСЂРѕС‚Р° РЅР° РѕСЃРё
+    // проекции угла поворота на оси
     int x = 24;
     int y = 44;
     int z = 0;
-    // РѕС‚РґР°Р»РµРЅРёРµ
+    // отдаление
     double translateZ = -35.0;
 
 
@@ -2094,16 +1971,16 @@ public:
 
     void rotate90(int id, int sign) {
         int i, j, k;
-        // РµСЃР»Рё sign = -1, Р·РЅР°С‡РёС‚ РєСЂСѓС‚РёРј 3 СЂР°Р·Р°
-        if (sign == -1) 
+        // если sign = -1, значит крутим 3 раза
+        if (sign == -1)
             sign = 3;
 
         while (sign--) {
             switch (id) {
             case 0:
                 k = 0;
-                // РєРѕРїРёСЂСѓРµРј РїРѕРІС‘СЂРЅСѓС‚СѓСЋ РЅР° 90 РіСЂР°РґСѓСЃРѕРІ РІРµСЂС…РЅСЋСЋ/РЅРёР¶РЅСЋСЋ РіСЂР°РЅСЊ
-                // РІ РјР°СЃСЃРёРІ tmp, Р·Р°С‚РµРј РіСЂР°РЅРё РїСЂРёСЃРІР°РёРІР°РµРј tmp
+                // копируем повёрнутую на 90 градусов верхнюю/нижнюю грань
+                // в массив tmp, затем грани присваиваем tmp
                 for (i = 0; i < 3; i++)
                     for (j = 0; j < 3; j++)
                         tmp[j][2 - i] = arr[i][j][k];
@@ -2201,10 +2078,10 @@ public:
                 timer(dir, 0);
             }
             else {
-                // СѓРіРѕР» СЃС‚Р°Р» РєСЂР°С‚РЅС‹Рј 90, РїРѕРІР°СЂР°С‡РёРІР°РµРј РЅР° РјР°СЃСЃРёРІРµ
-                if ((rotates[id] < 0) ^ (current == 2 || current == 3)) 
+                // угол стал кратным 90, поварачиваем на массиве
+                if ((rotates[id] < 0) ^ (current == 2 || current == 3))
                     rotate90(id, 1);
-                else 
+                else
                     rotate90(id, -1);
 
                 rotates[id] = 0;
@@ -2213,196 +2090,3 @@ public:
         }
     }
 };
-
-const int CUBE_SIZE = 15;
-const int TIMER = 5;
-// РѕР±РѕР·РЅР°С‡Р°РµРј С†РІРµС‚Р°
-unsigned int color[6] = { 0x008000, 0x122FAA, 0xFFF44F, 0xFFFFFF, 0xFF5E00, 0xE32636 };
-
-// РїСЂРѕРµРєС†РёРё СѓРіР»Р° РїРѕРІРѕСЂРѕС‚Р° РЅР° РѕСЃРё
-int x = 24;
-int y = 44;
-int z = 0;
-// РѕС‚РґР°Р»РµРЅРёРµ
-double translateZ = -35.0;
-
-RubiksCube cube;
-
-void display() {
-    glPushMatrix();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glColor3f(1, 0, 0);
-    glTranslatef(0, 0, translateZ);
-    glRotatef(x, 1, 0, 0);
-    glRotatef(y, 0, 1, 0);
-    glTranslatef(CUBE_SIZE / -2.0, CUBE_SIZE / -2.0, CUBE_SIZE / -2.0);
-    cube.draw();
-    glPopMatrix();
-    glutSwapBuffers();
-}
-
-void reshape(int w, int h) {
-    glViewport(0, 0, w, h);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    GLfloat fAspect = (GLfloat)w / (GLfloat)h;
-    gluPerspective(60, fAspect, 1, 1000.0);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-}
-
-void timer(int) {
-    glutTimerFunc(TIMER, timer, 0);
-    if (cube.current != -1) 
-        cube.Rotate(cube.current, 3, -1);
-    
-    display();
-}
-
-void specialKeys(int key, int, int) {
-    // РєР»Р°РІРёС€Рё РІР»РµРІРѕ/РІРїСЂР°РІРѕ РІСЂР°С‰Р°СЋС‚ РїРѕ Y
-    // РєР»Р°РІРёС€Рё РІРІРµСЂС…/РІРЅРёР· РІСЂР°С‰Р°СЋС‚ РїРѕ X
-    if (key == GLUT_KEY_UP) {
-        x += 5;
-        if (x >= 360) x -= 360;
-        glutPostRedisplay();
-    }
-
-    if (key == GLUT_KEY_DOWN) {
-        x -= 5;
-        if (x < 0) x += 360;
-        glutPostRedisplay();
-    }
-
-    if (key == GLUT_KEY_RIGHT) {
-        y += 5;
-        if (y >= 360) y -= 360;
-        glutPostRedisplay();
-    }
-
-    if (key == GLUT_KEY_LEFT) {
-        y -= 5;
-        if (y < 0) y += 360;
-        glutPostRedisplay();
-    }
-
-    if (key == GLUT_KEY_F1) {
-        cube.Rotate(0, 3, 1);
-    }
-
-    if (key == GLUT_KEY_F2) {
-        cube.Rotate(0, 3, -1);
-    }
-
-    if (key == GLUT_KEY_F3) {
-        cube.Rotate(1, 3, 1);
-    }
-
-    if (key == GLUT_KEY_F4) {
-        cube.Rotate(1, 3, -1);
-    }
-
-    if (key == GLUT_KEY_F5) {
-        cube.Rotate(2, 3, 1);
-    }
-
-    if (key == GLUT_KEY_F6) {
-        cube.Rotate(2, 3, -1);
-    }
-
-    if (key == GLUT_KEY_F7) {
-        cube.Rotate(3, 3, 1);
-    }
-
-    if (key == GLUT_KEY_F8) {
-        cube.Rotate(3, 3, -1);
-    }
-
-    if (key == GLUT_KEY_F9) {
-        cube.Rotate(4, 3, 1);
-    }
-
-    if (key == GLUT_KEY_F10) {
-        cube.Rotate(4, 3, -1);
-    }
-
-    if (key == GLUT_KEY_F11) {
-        cube.Rotate(5, 3, 1);
-    }
-
-    if (key == GLUT_KEY_F12) {
-        cube.Rotate(5, 3, -1);
-    }
-}
-
-void processMenu(int option) {
-    switch (option) {
-    case 1:
-        cube.read();
-        cube.random_generate();
-        break;
-    case 2:
-        cube.solve();
-        break;
-    case 3:
-        cube.pattern();
-        break;
-    }
-}
-
-void createGLUTMenus() {
-    glutCreateMenu(processMenu);
-
-    glutAddMenuEntry("random generate", 1);
-    glutAddMenuEntry("solve", 2);
-    glutAddMenuEntry("pattern", 3);
-
-    glutAttachMenu(GLUT_RIGHT_BUTTON);
-}
-
-
-
-
-int main(int argc, char** argv) {
-
-    glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-    glutInitWindowSize(800, 700);
-    glutInitWindowPosition(1, 1);
-    glutCreateWindow("Rubik's cube");
-    glClearColor(0.95, 0.87, 0.96, 1);
-
-    // РѕСЃРІРµС‰РµРЅРёРµ
-    float ambient[] = { 0.9, 0.9, 0.9, 1.0 };
-    glMateriali(GL_FRONT, GL_SHININESS, 128);
-    glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
-    glEnable(GL_LIGHT0);
-    glEnable(GL_COLOR_MATERIAL);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_LIGHTING);
-
-    // РёРЅРёС†РёР°Р»РёР·РёСЂСѓРµРј РєСѓР±
-    cube.clear(CUBE_SIZE, color);
-    glutDisplayFunc(display);
-    glutReshapeFunc(reshape);
-    glutTimerFunc(TIMER, timer, 0);
-    glutSpecialFunc(specialKeys);
-    createGLUTMenus();
-    glutMainLoop();
-
-
-
-    //RubiksCube cube;
-
-    //cube.read();
-    ////cube.show();
-    ////cube.save();
-    //cube.random_generate();
-    //cube.show();
-    //cube.rotate();
-    ////if (!cube.check()) std::cout << "Wrong cube :(" << std::endl;
-    //cube.solve();
-    ////cube.show();
-
-    return 0;
-}
